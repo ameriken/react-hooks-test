@@ -1,8 +1,12 @@
 import React, { useState, useContext} from 'react';
 import {
     CREATE_EVENT,
-    DELETE_ALL_EVENTS
+    DELETE_ALL_EVENTS,
+    ADD_OPERATION_LOG,
+    DELETE_ALL_OPERATION_LOGS
 } from "../actions";
+
+import { timeCurrentIso8601} from "../utils";
 import AppContext from "../contexts/AppContext";
 
 const EventForm = () => {
@@ -12,21 +16,45 @@ const EventForm = () => {
 
     const addEvent = e => {
         e.preventDefault()
+
         dispatch({
             type: CREATE_EVENT,
             title,
             body
         })
+
+        dispatch({
+            type: ADD_OPERATION_LOG,
+            description: 'イベントを作成しました。',
+            operatedAt: timeCurrentIso8601()
+        })
         setTitle('')
         setBody('')
     }
+    console.log(state)
 
     const deleteAllEvent = e => {
         e.preventDefault()
         const result = window.confirm('全てのイベントを本当に削除しても良いですか？')
-        if(result) dispatch({type: DELETE_ALL_EVENTS})
+        if(result) {
+            dispatch({type: DELETE_ALL_EVENTS})
+            dispatch({
+                type: ADD_OPERATION_LOG,
+                description: '全てのイベントを削除しました。',
+                operatedAt: timeCurrentIso8601()
+            })
+        }
     }
     const unCreatable = title === '' || body === '';
+    const deleteAllOperationLogs = e => {
+        e.preventDefault()
+        const result = window.confirm('全ての操作ログを本当に削除してもいいですか？')
+        if(result) {
+            dispatch({
+                type: DELETE_ALL_OPERATION_LOGS
+            })
+        }
+    }
     return (
         <>
             <h4>イベント作成フォーム</h4>
@@ -41,6 +69,7 @@ const EventForm = () => {
                 </div>
                 <button className="btn btn-primary" onClick={addEvent} disabled={unCreatable}>イベントを作成する</button>
                 <button className="btn btn-danger" onClick={deleteAllEvent} disabled={state.events.length === 0}>全てのイベントを削除する</button>
+                <button className="btn btn-danger" onClick={deleteAllOperationLogs} disabled={state.operationLogs.length === 0}>全ての操作ログを削除する</button>
             </form>
         </>
     );
